@@ -2,13 +2,14 @@
   "name": "Cronometro",
   "short_name": "Cronometro",
   "description": "Cronometro geral com marcacoes de tempo parcial.",
-  "start_url": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#050505",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "icon.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"

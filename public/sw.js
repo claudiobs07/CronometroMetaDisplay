@@ -1,5 +1,11 @@
-const CACHE_NAME = "general-stopwatch:v1";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
+const CACHE_NAME = "general-stopwatch:v2";
+const SCOPE_URL = new URL(self.registration.scope);
+const APP_SHELL = [
+  SCOPE_URL.href,
+  new URL("index.html", SCOPE_URL).href,
+  new URL("manifest.webmanifest", SCOPE_URL).href,
+  new URL("icon.svg", SCOPE_URL).href,
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -32,7 +38,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match("/"));
+        .catch(() => caches.match(SCOPE_URL.href));
     }),
   );
 });
