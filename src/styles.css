@@ -1,0 +1,250 @@
+:root {
+  color: #f7f7f2;
+  background: #050505;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 201, 76, 0.16), transparent 38%),
+    #050505;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(100%, 600px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  display: grid;
+  grid-template-rows: auto minmax(92px, auto) auto auto minmax(0, 1fr);
+  gap: clamp(10px, 2.4dvh, 18px);
+}
+
+.stopwatch-header {
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #d8d8d1;
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timer-section {
+  display: grid;
+  place-items: center;
+}
+
+.stopwatch-time {
+  width: 100%;
+  color: #ffffff;
+  font-size: clamp(2.65rem, 12vw, 5rem);
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-section {
+  min-height: 96px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.status-title,
+.status-detail,
+.status-extra,
+.feedback {
+  margin: 0;
+}
+
+.status-title {
+  font-size: clamp(1.1rem, 3.8vw, 1.55rem);
+  font-weight: 760;
+}
+
+.status-detail,
+.status-extra {
+  color: #d8d8d1;
+  font-size: clamp(0.95rem, 3vw, 1.18rem);
+  font-weight: 620;
+}
+
+.feedback {
+  min-height: 1.2em;
+  color: #f2c94c;
+  font-size: 0.95rem;
+  font-weight: 760;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.feedback.is-visible {
+  opacity: 1;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.control-button {
+  min-height: 48px;
+  border: 1px solid #3c3c38;
+  border-radius: 8px;
+  color: #f7f7f2;
+  background: #171713;
+  font-size: clamp(0.85rem, 2.6vw, 1rem);
+  font-weight: 760;
+}
+
+.control-button[hidden] {
+  display: none;
+}
+
+.primary-button {
+  grid-column: span 3;
+  border-color: #f2c94c;
+  color: #050505;
+  background: #f2c94c;
+}
+
+.control-button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.marks-section {
+  min-height: 0;
+}
+
+.marks-section h2 {
+  margin: 0 0 8px;
+  color: #d8d8d1;
+  font-size: clamp(0.9rem, 2.4vw, 1rem);
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.marks-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mark-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 14px;
+  padding: 10px 12px;
+  border: 1px solid #2d2d2a;
+  border-radius: 8px;
+  background: #10100e;
+}
+
+.mark-item.is-new {
+  border-color: #f2c94c;
+}
+
+.mark-sequence {
+  grid-row: span 2;
+  min-width: 2.4rem;
+  color: #f2c94c;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.mark-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #d8d8d1;
+  font-size: clamp(0.86rem, 2.6vw, 1rem);
+}
+
+.mark-line strong {
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-marks {
+  padding: 12px;
+  color: #a9a9a2;
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-height: 560px) {
+  .app-shell {
+    gap: 8px;
+  }
+
+  .status-section {
+    min-height: 76px;
+  }
+
+  .control-button {
+    min-height: 42px;
+  }
+
+  .mark-item {
+    padding: 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
