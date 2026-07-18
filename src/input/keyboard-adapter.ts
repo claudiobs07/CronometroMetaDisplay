@@ -2,6 +2,8 @@ export interface KeyboardActions {
   primary: () => void;
   left: () => void;
   right: () => void;
+  up: () => void;
+  down: () => void;
   requestReset: () => void;
 }
 
@@ -24,6 +26,14 @@ export function handleKeyboardEvent(event: KeyboardEvent, actions: KeyboardActio
       break;
     case "ArrowRight":
       actions.right();
+      break;
+    case "ArrowUp":
+      event.preventDefault();
+      actions.up();
+      break;
+    case "ArrowDown":
+      event.preventDefault();
+      actions.down();
       break;
     case "Escape":
       actions.right();

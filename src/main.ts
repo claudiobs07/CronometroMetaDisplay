@@ -24,6 +24,7 @@ if (!appRoot) {
 let state: StopwatchState = loadState();
 let renderFrameId: number | null = null;
 let highlightedMarkId: string | null = null;
+let selectedMarkId: string | null = null;
 let highlightTimeoutId: number | null = null;
 
 const view = createStopwatchView(appRoot);
@@ -31,8 +32,11 @@ const view = createStopwatchView(appRoot);
 function commitState(nextState: StopwatchState): void {
   const previousStatus = state.status;
   state = nextState;
+  if (state.status !== "paused" || !state.marks.some((mark) => mark.id === selectedMarkId)) {
+    selectedMarkId = null;
+  }
   saveState(state);
-  view.renderAll(state, highlightedMarkId);
+  view.renderAll(state, getActiveMarkId());
 
   if (state.status === "running") {
     startRenderLoop();
@@ -66,6 +70,7 @@ function addTimeMarkAction(): void {
 }
 
 function requestResetAction(): void {
+  selectedMarkId = null;
   commitState(requestReset(state));
 }
 
@@ -75,6 +80,7 @@ function cancelResetAction(): void {
 
 function confirmResetAction(): void {
   highlightedMarkId = null;
+  selectedMarkId = null;
   commitState(confirmReset(state));
 }
 
@@ -110,9 +116,63 @@ function handleLeftAction(): void {
 }
 
 function handleRightAction(): void {
-  if (state.status === "confirming-reset") {
-    cancelResetAction();
+  switch (state.status) {
+    case "paused":
+      clearSelectedMark();
+      break;
+    case "confirming-reset":
+      cancelResetAction();
+      break;
+    case "idle":
+    case "running":
+      break;
   }
+}
+
+function handleDownAction(): void {
+  if (state.status !== "paused" || state.marks.length === 0) {
+    return;
+  }
+
+  clearNewMarkHighlight();
+  const marksFromNewest = state.marks.slice().reverse();
+  if (selectedMarkId === null) {
+    selectedMarkId = marksFromNewest[0].id;
+    view.renderMarks(state, selectedMarkId);
+    return;
+  }
+
+  const selectedIndex = marksFromNewest.findIndex((mark) => mark.id === selectedMarkId);
+  if (selectedIndex === -1) {
+    selectedMarkId = marksFromNewest[0].id;
+    view.renderMarks(state, selectedMarkId);
+    return;
+  }
+
+  const nextMark = marksFromNewest[selectedIndex + 1];
+  if (!nextMark) {
+    return;
+  }
+
+  selectedMarkId = nextMark.id;
+  view.renderMarks(state, selectedMarkId);
+}
+
+function handleUpAction(): void {
+  if (state.status !== "paused" || selectedMarkId === null) {
+    return;
+  }
+
+  clearNewMarkHighlight();
+  const marksFromNewest = state.marks.slice().reverse();
+  const selectedIndex = marksFromNewest.findIndex((mark) => mark.id === selectedMarkId);
+  if (selectedIndex <= 0) {
+    clearSelectedMark();
+    return;
+  }
+
+  selectedMarkId = marksFromNewest[selectedIndex - 1].id;
+  view.renderMarks(state, selectedMarkId);
 }
 
 function onPrimaryInput(): void {
@@ -125,6 +185,14 @@ function onLeftInput(): void {
 
 function onRightInput(): void {
   executeWithInputLock(handleRightAction);
+}
+
+function onUpInput(): void {
+  executeWithInputLock(handleUpAction);
+}
+
+function onDownInput(): void {
+  executeWithInputLock(handleDownAction);
 }
 
 function startRenderLoop(): void {
@@ -155,8 +223,9 @@ function stopRenderLoop(): void {
 }
 
 function highlightMark(markId: string): void {
+  clearSelectedMark();
   highlightedMarkId = markId;
-  view.renderMarks(state, highlightedMarkId);
+  view.renderMarks(state, getActiveMarkId());
 
   if (highlightTimeoutId !== null) {
     window.clearTimeout(highlightTimeoutId);
@@ -164,9 +233,30 @@ function highlightMark(markId: string): void {
 
   highlightTimeoutId = window.setTimeout(() => {
     highlightedMarkId = null;
-    view.renderMarks(state);
+    view.renderMarks(state, getActiveMarkId());
     highlightTimeoutId = null;
   }, 500);
+}
+
+function clearSelectedMark(): void {
+  if (selectedMarkId === null) {
+    return;
+  }
+
+  selectedMarkId = null;
+  view.renderMarks(state, getActiveMarkId());
+}
+
+function clearNewMarkHighlight(): void {
+  if (highlightTimeoutId !== null) {
+    window.clearTimeout(highlightTimeoutId);
+    highlightTimeoutId = null;
+  }
+  highlightedMarkId = null;
+}
+
+function getActiveMarkId(): string | null {
+  return selectedMarkId ?? highlightedMarkId;
 }
 
 document.addEventListener("keydown", (event) =>
@@ -174,6 +264,8 @@ document.addEventListener("keydown", (event) =>
     primary: onPrimaryInput,
     left: onLeftInput,
     right: onRightInput,
+    up: onUpInput,
+    down: onDownInput,
     requestReset: () => {
       if (state.status === "paused") {
         onLeftInput();
@@ -188,7 +280,7 @@ document.addEventListener("visibilitychange", () => {
     return;
   }
 
-  view.renderAll(state, highlightedMarkId);
+  view.renderAll(state, getActiveMarkId());
   if (state.status === "running") {
     startRenderLoop();
   }
@@ -202,6 +294,8 @@ registerMetaDisplayAdapter({
   onPrimaryInput,
   onLeftInput,
   onRightInput,
+  onUpInput,
+  onDownInput,
 });
 
 view.renderAll(state);

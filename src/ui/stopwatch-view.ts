@@ -1,12 +1,12 @@
 import { formatElapsedTime } from "../stopwatch/stopwatch-format";
-import type { StopwatchState } from "../stopwatch/types";
+import type { StopwatchState, TimeMark } from "../stopwatch/types";
 import { getElapsedTime } from "../stopwatch/stopwatch-actions";
 
 export interface StopwatchView {
   root: HTMLElement;
-  renderAll: (state: StopwatchState, highlightedMarkId?: string | null) => void;
+  renderAll: (state: StopwatchState, activeMarkId?: string | null) => void;
   renderStopwatch: (state: StopwatchState) => void;
-  renderMarks: (state: StopwatchState, highlightedMarkId?: string | null) => void;
+  renderMarks: (state: StopwatchState, activeMarkId?: string | null) => void;
   showFeedback: (message: string) => void;
   setPrimaryAction: (action: () => void) => void;
   setLeftAction: (action: () => void) => void;
@@ -78,8 +78,8 @@ export function createStopwatchView(root: HTMLElement): StopwatchView {
     screenReaderTimeElement.textContent = `Tempo total ${formatElapsedTime(getElapsedTime(state))}`;
   }
 
-  function renderMarks(state: StopwatchState, highlightedMarkId?: string | null): void {
-    const visibleMarks = state.marks.slice(-3).reverse();
+  function renderMarks(state: StopwatchState, activeMarkId?: string | null): void {
+    const visibleMarks = getVisibleMarks(state, activeMarkId);
     marksListElement.innerHTML = "";
 
     if (visibleMarks.length === 0) {
@@ -93,8 +93,9 @@ export function createStopwatchView(root: HTMLElement): StopwatchView {
     for (const mark of visibleMarks) {
       const item = document.createElement("li");
       item.className = "mark-item";
-      if (mark.id === highlightedMarkId) {
+      if (mark.id === activeMarkId) {
         item.classList.add("is-new");
+        item.setAttribute("aria-current", "true");
       }
 
       item.innerHTML = `
@@ -106,10 +107,10 @@ export function createStopwatchView(root: HTMLElement): StopwatchView {
     }
   }
 
-  function renderAll(state: StopwatchState, highlightedMarkId?: string | null): void {
+  function renderAll(state: StopwatchState, activeMarkId?: string | null): void {
     renderStopwatch(state);
     renderStatus(state);
-    renderMarks(state, highlightedMarkId);
+    renderMarks(state, activeMarkId);
   }
 
   function showFeedback(message: string): void {
@@ -137,6 +138,21 @@ export function createStopwatchView(root: HTMLElement): StopwatchView {
     setLeftAction: (action) => leftButton.addEventListener("click", action),
     setRightAction: (action) => rightButton.addEventListener("click", action),
   };
+}
+
+function getVisibleMarks(state: StopwatchState, activeMarkId?: string | null): TimeMark[] {
+  const marksFromNewest = state.marks.slice().reverse();
+  if (!activeMarkId) {
+    return marksFromNewest.slice(0, 3);
+  }
+
+  const activeIndex = marksFromNewest.findIndex((mark) => mark.id === activeMarkId);
+  if (activeIndex === -1) {
+    return marksFromNewest.slice(0, 3);
+  }
+
+  const startIndex = Math.min(activeIndex, Math.max(0, marksFromNewest.length - 3));
+  return marksFromNewest.slice(startIndex, startIndex + 3);
 }
 
 function getStatusContent(status: StopwatchState["status"]) {

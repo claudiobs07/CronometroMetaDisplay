@@ -13,6 +13,7 @@ import { formatElapsedTime } from "../src/stopwatch/stopwatch-format";
 import { createInitialState, sanitizeState } from "../src/stopwatch/stopwatch-state";
 import { loadState, saveState, STORAGE_KEY } from "../src/stopwatch/stopwatch-storage";
 import type { StopwatchState } from "../src/stopwatch/types";
+import { handleKeyboardEvent, type KeyboardActions } from "../src/input/keyboard-adapter";
 
 describe("formatElapsedTime", () => {
   it.each([
@@ -161,6 +162,48 @@ describe("persistence", () => {
   });
 });
 
+describe("keyboard input", () => {
+  it("maps ArrowUp to up action", () => {
+    const actions = createKeyboardActions();
+    const event = createKeyboardEvent("ArrowUp");
+
+    handleKeyboardEvent(event, actions);
+
+    expect(actions.up).toHaveBeenCalledOnce();
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+  });
+
+  it("maps ArrowDown to down action", () => {
+    const actions = createKeyboardActions();
+    const event = createKeyboardEvent("ArrowDown");
+
+    handleKeyboardEvent(event, actions);
+
+    expect(actions.down).toHaveBeenCalledOnce();
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+  });
+
+  it("ignores repeated ArrowDown input", () => {
+    const actions = createKeyboardActions();
+    const event = createKeyboardEvent("ArrowDown", true);
+
+    handleKeyboardEvent(event, actions);
+
+    expect(actions.down).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+
+  it("ignores repeated ArrowUp input", () => {
+    const actions = createKeyboardActions();
+    const event = createKeyboardEvent("ArrowUp", true);
+
+    handleKeyboardEvent(event, actions);
+
+    expect(actions.up).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+});
+
 function createMemoryStorage(): Storage {
   const data = new Map<string, string>();
 
@@ -174,4 +217,23 @@ function createMemoryStorage(): Storage {
     removeItem: vi.fn((key: string) => data.delete(key)),
     setItem: vi.fn((key: string, value: string) => data.set(key, value)),
   };
+}
+
+function createKeyboardActions(): KeyboardActions {
+  return {
+    primary: vi.fn(),
+    left: vi.fn(),
+    right: vi.fn(),
+    up: vi.fn(),
+    down: vi.fn(),
+    requestReset: vi.fn(),
+  };
+}
+
+function createKeyboardEvent(key: string, repeat = false): KeyboardEvent {
+  return {
+    key,
+    repeat,
+    preventDefault: vi.fn(),
+  } as unknown as KeyboardEvent;
 }
